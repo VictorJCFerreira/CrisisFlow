@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CrisisFlow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Manchester triage palette */
+    --p1: #CE2029;
+    --p1-bg: #fdecec;
+    --p2: #E87722;
+    --p2-bg: #fdf0e3;
+    --p3: #F1C232;
+    --p3-bg: #fdf6dd;
+    --p4: #2F8A43;
+    --p4-bg: #e6f3e9;
+    --p5: #1351B4;
+    --p5-bg: #e3edfb;
+    --gray: #7F8C8D;
+    --gray-bg: #ecedee;
+
+    --ink: #111418;
+    --ink-2: #2a2f36;
+    --muted: #5b6470;
+    --line: #d9dde2;
+    --line-2: #e8ebef;
+    --bg: #f4f5f7;
+    --surface: #ffffff;
+    --surface-2: #f9fafb;
+    --shadow-1: 0 1px 0 rgba(17,20,24,0.04), 0 1px 2px rgba(17,20,24,0.04);
+    --shadow-2: 0 2px 8px rgba(17,20,24,0.06);
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #1a1d22;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  #root { width: 100%; max-width: 1280px; }
+
+  button { font-family: inherit; cursor: pointer; }
+
+  /* Pulsing critical badge — subtle */
+  @keyframes critPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(206,32,41,0.55); }
+    50%      { box-shadow: 0 0 0 6px rgba(206,32,41,0); }
+  }
+  .crit-pulse { animation: critPulse 2.2s ease-in-out infinite; }
+
+  /* Toast slide in */
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+
+  /* Drag visual */
+  .drag-ghost {
+    cursor: grabbing !important;
+    opacity: 0.4;
+  }
+  .drop-target-active {
+    outline: 2px dashed var(--p5);
+    outline-offset: -2px;
+    background: var(--p5-bg) !important;
+  }
+
+  /* Scrollbars */
+  .scroll-area::-webkit-scrollbar { width: 8px; height: 8px; }
+  .scroll-area::-webkit-scrollbar-thumb { background: #c8ccd1; border-radius: 4px; }
+  .scroll-area::-webkit-scrollbar-track { background: transparent; }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" src="src/data.jsx"></script>
+  <script type="text/babel" src="src/icons.jsx"></script>
+  <script type="text/babel" src="src/ui.jsx"></script>
+  <script type="text/babel" src="src/screen-dashboard.jsx"></script>
+  <script type="text/babel" src="src/screen-cases.jsx"></script>
+  <script type="text/babel" src="src/screen-volunteers.jsx"></script>
+  <script type="text/babel" src="src/screen-supplies.jsx"></script>
+  <script type="text/babel" src="src/screen-more.jsx"></script>
+  <script type="text/babel" src="src/screen-volunteer-mobile.jsx"></script>
+  <script type="text/babel" src="src/app.jsx"></script>
+</body>
+</html>
