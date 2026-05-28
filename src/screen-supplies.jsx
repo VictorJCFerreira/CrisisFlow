@@ -138,6 +138,17 @@ function ScreenSupplies({ state, actions }) {
               Configurar limites: {editLimitItem.name}
             </div>
             <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {parseFloat(minVal) > parseFloat(maxVal) && (
+                <div style={{
+                  fontSize: 12, color: 'var(--p1)',
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  padding: '8px 10px', background: 'var(--p1-bg)',
+                  borderRadius: 6, border: '1px solid #f5c2c5',
+                }}>
+                  <Icon.Alert size={14} color="var(--p1)" />
+                  O mínimo não pode ser maior que a capacidade máxima.
+                </div>
+              )}
               <div>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--ink-2)', marginBottom: 4 }}>
                   Mínimo Recomendado ({editLimitItem.unit})
@@ -148,7 +159,8 @@ function ScreenSupplies({ state, actions }) {
                   onChange={e => setMinVal(e.target.value)} 
                   style={{
                     width: '100%', padding: '10px 12px', borderRadius: 6,
-                    border: '1px solid var(--line)', fontSize: 14, background: '#fff',
+                    border: parseFloat(minVal) > parseFloat(maxVal) ? '1px solid var(--p1)' : '1px solid var(--line)',
+                    fontSize: 14, background: '#fff',
                   }} 
                 />
                 <span style={{ fontSize: 11, color: 'var(--muted)', display: 'block', marginTop: 4 }}>
@@ -165,7 +177,8 @@ function ScreenSupplies({ state, actions }) {
                   onChange={e => setMaxVal(e.target.value)} 
                   style={{
                     width: '100%', padding: '10px 12px', borderRadius: 6,
-                    border: '1px solid var(--line)', fontSize: 14, background: '#fff',
+                    border: parseFloat(minVal) > parseFloat(maxVal) ? '1px solid var(--p1)' : '1px solid var(--line)',
+                    fontSize: 14, background: '#fff',
                   }} 
                 />
               </div>
@@ -182,14 +195,19 @@ function ScreenSupplies({ state, actions }) {
               }}>Cancelar</button>
               <button 
                 onClick={() => {
-                  actions.updateSupplyLimits(editLimitItem.id, parseFloat(minVal) || 0, parseFloat(maxVal) || 100);
+                  const parsedMin = parseFloat(minVal) || 0;
+                  const parsedMax = parseFloat(maxVal) || 0;
+                  if (parsedMin > parsedMax) return;
+                  actions.updateSupplyLimits(editLimitItem.id, parsedMin, parsedMax);
                   setEditLimitItem(null);
                 }} 
+                disabled={parseFloat(minVal) > parseFloat(maxVal)}
                 style={{
                   flex: 1, minHeight: 44, padding: '10px 14px',
-                  background: 'var(--ink)', color: '#fff',
+                  background: parseFloat(minVal) > parseFloat(maxVal) ? 'var(--line)' : 'var(--ink)',
+                  color: parseFloat(minVal) > parseFloat(maxVal) ? 'var(--muted)' : '#fff',
                   border: 'none', borderRadius: 8,
-                  fontWeight: 600, fontSize: 14, cursor: 'pointer',
+                  fontWeight: 600, fontSize: 14, cursor: parseFloat(minVal) > parseFloat(maxVal) ? 'not-allowed' : 'pointer',
                 }}
               >Salvar</button>
             </div>
@@ -232,16 +250,10 @@ function BatchDonationModal({ open, onClose, actions }) {
   const validate = () => {
     const errs = {};
     rows.forEach((r, i) => {
-      const trimmedName = r.name.trim();
-      if (!trimmedName) {
-        errs[`${i}-name`] = 'Informe o item.';
-      } else {
-        const isValidItem = ITEM_AUTOCOMPLETE.some(item => item.toLowerCase() === trimmedName.toLowerCase());
-        if (!isValidItem) {
-          errs[`${i}-name`] = 'Por favor, selecione um item válido da lista.';
-        }
+      if (!r.name) {
+        errs[`${i}-name`] = 'Selecione o item.';
       }
-      if (trimmedName.toLowerCase() === 'outro') {
+      if (r.name && r.name.toLowerCase() === 'outro') {
         if (!r.description || !r.description.trim()) {
           errs[`${i}-description`] = 'Informe a descrição do item.';
         }
@@ -411,13 +423,18 @@ function BatchDonationModal({ open, onClose, actions }) {
 
 function DonationRow({ idx, row, errors, onUpdate, onRemove, canRemove }) {
   const ITEMS = window.CFData.ITEM_AUTOCOMPLETE;
-  const [showAC, setShowAC] = React.useState(false);
-  const matches = row.name.length >= 2
-    ? ITEMS.filter(it => it.toLowerCase().includes(row.name.toLowerCase())).slice(0, 5)
-    : [];
   const errName = errors[`${idx}-name`];
   const errQty = errors[`${idx}-qty`];
   const errDesc = errors[`${idx}-description`];
+
+  const sortedItems = React.useMemo(() => {
+    const listWithoutOutro = ITEMS.filter(it => it.toLowerCase() !== 'outro');
+    listWithoutOutro.sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    if (ITEMS.some(it => it.toLowerCase() === 'outro')) {
+      listWithoutOutro.push('Outro');
+    }
+    return listWithoutOutro;
+  }, [ITEMS]);
 
   return (
     <div style={{
@@ -429,34 +446,23 @@ function DonationRow({ idx, row, errors, onUpdate, onRemove, canRemove }) {
           width: 24, height: 36, display: 'grid', placeItems: 'center',
           fontSize: 11, color: 'var(--muted)', fontWeight: 700,
         }}>{idx + 1}</div>
-        <div style={{ flex: 2, position: 'relative' }}>
-          <input
+        <div style={{ flex: 2 }}>
+          <select
             value={row.name}
-            onChange={(e) => { onUpdate(idx, 'name', e.target.value); setShowAC(true); }}
-            onFocus={() => setShowAC(true)}
-            onBlur={() => setTimeout(() => setShowAC(false), 150)}
-            placeholder="Item"
+            onChange={(e) => onUpdate(idx, 'name', e.target.value)}
             style={{
               width: '100%', padding: '10px 12px', minHeight: 44,
               border: `1px solid ${errName ? 'var(--p1)' : 'var(--line)'}`,
               borderRadius: 6, fontSize: 14, fontFamily: 'inherit',
               background: '#fff',
-            }} />
-          {showAC && matches.length > 0 && (
-            <div style={{
-              position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 5,
-              background: '#fff', border: '1px solid var(--line)',
-              borderRadius: 6, boxShadow: 'var(--shadow-2)',
-              marginTop: 2, overflow: 'hidden',
-            }}>
-              {matches.map(m => (
-                <div key={m} onMouseDown={() => onUpdate(idx, 'name', m)} style={{
-                  padding: '8px 10px', fontSize: 13, cursor: 'pointer',
-                  borderBottom: '1px solid var(--line-2)',
-                }}>{m}</div>
-              ))}
-            </div>
-          )}
+              color: row.name ? 'var(--ink)' : 'var(--muted)',
+            }}
+          >
+            <option value="" style={{ color: 'var(--muted)' }}>Selecione o item...</option>
+            {sortedItems.map(m => (
+              <option key={m} value={m} style={{ color: 'var(--ink)' }}>{m}</option>
+            ))}
+          </select>
         </div>
         <div style={{ flex: 1 }}>
           <input
@@ -494,7 +500,7 @@ function DonationRow({ idx, row, errors, onUpdate, onRemove, canRemove }) {
         )}
       </div>
       
-      {row.name.toLowerCase() === 'outro' && (
+      {row.name && row.name.toLowerCase() === 'outro' && (
         <div style={{ marginTop: 8, marginLeft: 32 }}>
           <input
             value={row.description}
@@ -510,7 +516,7 @@ function DonationRow({ idx, row, errors, onUpdate, onRemove, canRemove }) {
         </div>
       )}
 
-      {(errName || errQty || (row.name.toLowerCase() === 'outro' && errDesc)) && (
+      {(errName || errQty || (row.name && row.name.toLowerCase() === 'outro' && errDesc)) && (
         <div style={{
           marginTop: 4, marginLeft: 32, fontSize: 12, color: 'var(--p1)',
           display: 'flex', alignItems: 'center', gap: 4,
@@ -554,21 +560,13 @@ function BatchConsumptionModal({ open, onClose, actions, state }) {
   const validate = () => {
     const errs = {};
     rows.forEach((r, i) => {
-      const trimmedName = r.name.trim();
-      let finalItemName = trimmedName;
-
-      if (!trimmedName) {
-        errs[`${i}-name`] = 'Informe o item.';
+      if (!r.name) {
+        errs[`${i}-name`] = 'Selecione o item.';
         return;
-      } else {
-        const isValidItem = ITEM_AUTOCOMPLETE.some(item => item.toLowerCase() === trimmedName.toLowerCase());
-        if (!isValidItem) {
-          errs[`${i}-name`] = 'Por favor, selecione um item válido da lista.';
-          return;
-        }
       }
 
-      if (trimmedName.toLowerCase() === 'outro') {
+      let finalItemName = r.name;
+      if (r.name.toLowerCase() === 'outro') {
         if (!r.description || !r.description.trim()) {
           errs[`${i}-description`] = 'Informe a descrição do item.';
           return;

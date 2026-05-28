@@ -320,6 +320,34 @@ function CaseCard({ c, state, actions, focused }) {
               }}>
                 <span style={{ width: 5, height: 5, borderRadius: 3, background: 'var(--p5)' }} />
                 {v.name.split(' ')[0]}
+                <span
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    actions.changeVolunteerStatus(v.id, 'disponível');
+                  }}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginLeft: 2,
+                    marginRight: -4,
+                    padding: 2,
+                    borderRadius: '50%',
+                    cursor: 'pointer',
+                    transition: 'background 150ms, transform 100ms',
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.background = 'rgba(19, 81, 180, 0.15)';
+                    e.currentTarget.style.transform = 'scale(1.15)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }}
+                  title={`Remover ${v.name} deste caso`}
+                >
+                  <Icon.Close size={10} strokeWidth={3} color="var(--p5)" />
+                </span>
               </span>
             ))}
           </div>
